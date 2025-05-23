@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 TOKEN = os.getenv('TOKEN')
-WEBHOOK_URL = os.getenv('WEBHOOK_URL')
+# WEBHOOK_URL from env not used here because hardcoded webhook URL is set below
 TAMILMV_URL = os.getenv('TAMILMV_URL', 'https://www.1tamilmv.ist')
 CF_CLEARANCE = os.getenv('CF_CLEARANCE')
 PORT = int(os.getenv('PORT', 8080))
@@ -44,6 +44,8 @@ HEADERS = {
 COOKIES = {
     'cf_clearance': CF_CLEARANCE
 }
+
+# Your existing handlers here (start_command, view_command, callback_query, etc.)
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -179,22 +181,23 @@ def get_movie_details(url):
         logger.error(f"Error retrieving movie details: {e}")
         return []
 
+# *** Replace your webhook & health routes here with hardcoded ones as requested ***
+
 @app.route('/')
 def health_check():
-    return "Angel Bot Healthy", 200
+    return "Healthy", 200
 
-@app.route('/webhook', methods=['POST'])
+@app.route('/7818048200:AAE5Z_QLMibVhfT-lMD3RHfJ2O-ja3L1x8k', methods=['POST'])
 def webhook():
-    if request.headers.get('content-type') == 'application/json':
-        json_string = request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
-        return 'Invalid content type', 403
+    update = telebot.types.Update.de_json(request.stream.read().decode("utf-8"))
+    bot.process_new_updates([update])
+    return "ok", 200
 
 if __name__ == "__main__":
-    bot.remove_webhook()
-    time.sleep(1)
-    bot.set_webhook(url=f"https://combative-ardella-karthikpro12737-7a90b660.koyeb.app/bot7818048200:AAE5Z_QLMibVhfT-lMD3RHfJ2O-ja3L1x8k")
+    try:
+        bot.remove_webhook()
+        bot.set_webhook(url="https://combative-ardella-karthikpro12737-7a90b660.koyeb.app/7818048200:AAE5Z_QLMibVhfT-lMD3RHfJ2O-ja3L1x8k")
+        print("Webhook set successfully")
+    except Exception as e:
+        print(f"Webhook setup failed: {e}")
     app.run(host='0.0.0.0', port=PORT)
