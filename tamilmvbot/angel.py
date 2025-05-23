@@ -19,8 +19,9 @@ load_dotenv()
 # ============ WOODctaft =================
 TOKEN = os.getenv('TOKEN')
 WEBHOOK_URL = os.getenv('WEBHOOK_URL')
-TAMILMV_URL = os.getenv('TAMILMV_URL', 'https://www.1tamilmv.fi')
-PORT = int(os.getenv('PORT', 3000))
+TAMILMV_URL = os.getenv('TAMILMV_URL', 'https://www.1tamilmv.ist')
+CF_CLEARANCE = os.getenv('CF_CLEARANCE', 'RlgHIeuzpe902MYx0vc_ZOtur9EpJ3WVUF9W20SBNXw-1747980033-1.2.1.1-vn86D89aC3ILph66naLWlmkwGr0Y8yWyjbNprhfHY1vk6sb0MLz6Ce2BsKuxUpjizefU0yuu4YOrBiCsxpF2szBZTzuxoQIL4iu57wQm6H5Cm5jp8YNiEBfeqAC9UUV9Nf_FQiUZ1jZMO8Kaha3ri_94ZIi7rYIS6aC9qZQBnrX21qAyA2smUgxGMlx7iJnm5gl2bCQ.aBUaMZyzIEcBTEOs96LuT48XQ.UBBLnhwHLd65Uu59YwD606qPHDquC3o7jgfjZ4AFpjm8g4zzSESoyjjw7DxnS7BKqV0ttkI34Q8mxbNxXmJJ.JFr2QsmZK2llDVPdoAFdD6r7GJE0UvHCxsykEJ1QPr9LGCUEugDc')  # <<< Added line
+PORT = int(os.getenv('PORT', 8080))
 # ========================================
 bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
 
@@ -31,9 +32,15 @@ app = Flask(__name__)
 movie_list = []
 real_dict = {}
 
+# Reusable headers + cookies
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
+COOKIES = {
+    'cf_clearance': CF_CLEARANCE
+}
+
 # /start command
-
-
 @bot.message_handler(commands=['start'])
 def random_answer(message):
     text_message = """<b>Hello 👋</b>
@@ -63,8 +70,6 @@ def random_answer(message):
     )
 
 # /view command
-
-
 @bot.message_handler(commands=['view'])
 def start(message):
     bot.send_message(message.chat.id, "<b>🧲 Please wait for 10 ⏰ seconds</b>")
@@ -81,7 +86,6 @@ def start(message):
         reply_markup=keyboard
     )
 
-
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     global real_dict
@@ -90,7 +94,6 @@ def callback_query(call):
             if value in real_dict.keys():
                 for i in real_dict[value]:
                     bot.send_message(call.message.chat.id, text=i)
-
 
 def makeKeyboard(movie_list):
     markup = types.InlineKeyboardMarkup()
@@ -101,18 +104,14 @@ def makeKeyboard(movie_list):
                 callback_data=f"{key}"))
     return markup
 
-
 def tamilmv():
     mainUrl = TAMILMV_URL
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
 
     movie_list = []
     real_dict = {}
 
     try:
-        web = requests.get(mainUrl, headers=headers)
+        web = requests.get(mainUrl, headers=HEADERS, cookies=COOKIES)
         web.raise_for_status()
         soup = BeautifulSoup(web.text, 'lxml')
 
@@ -135,10 +134,9 @@ def tamilmv():
         logger.error(f"Error in tamilmv function: {e}")
         return [], {}
 
-
 def get_movie_details(url):
     try:
-        html = requests.get(url, timeout=15)
+        html = requests.get(url, headers=HEADERS, cookies=COOKIES, timeout=15)
         html.raise_for_status()
         soup = BeautifulSoup(html.text, 'lxml')
 
@@ -180,11 +178,9 @@ def get_movie_details(url):
         logger.error(f"Error retrieving movie details: {e}")
         return []
 
-
 @app.route('/')
 def health_check():
     return "Angel Bot Healthy", 200
-
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -196,14 +192,8 @@ def webhook():
     else:
         return 'Invalid content type', 403
 
-
 if __name__ == "__main__":
-    # Remove any previous webhook
     bot.remove_webhook()
     time.sleep(1)
-
-    # Set webhook
     bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-
-    # Start Flask app
     app.run(host='0.0.0.0', port=PORT)
