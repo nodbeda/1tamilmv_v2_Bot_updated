@@ -180,9 +180,7 @@ def get_movie_details(url):
     except Exception as e:
         logger.error(f"Error retrieving movie details: {e}")
         return []
-
-# *** Replace your webhook & health routes here with hardcoded ones as requested ***
-
+        
 @app.route('/')
 def health_check():
     return "Healthy", 200
@@ -196,7 +194,7 @@ def webhook():
 if __name__ == "__main__":
     try:
         bot.remove_webhook()
-        bot.set_webhook(url="https://combative-ardella-karthikpro12737-7a90b660.koyeb.app/7818048200:AAE5Z_QLMibVhfT-lMD3RHfJ2O-ja3L1x8k")
+        bot.set_webhook(url="https://onetamilmv-v2-bot-updated.onrender.com/7818048200:AAE5Z_QLMibVhfT-lMD3RHfJ2O-ja3L1x8k")
         print("Webhook set successfully")
     except Exception as e:
         print(f"Webhook setup failed: {e}")
